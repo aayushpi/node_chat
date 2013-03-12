@@ -37,7 +37,7 @@ app.configure('development', function(){
 });
 
 passport.serializeUser(function(user, done) {
-  done(null, user.id);
+  done(null, user);
 });
 
 passport.deserializeUser(function(user, done) {
@@ -58,7 +58,15 @@ passport.use(new GoogleStrategy({
 ));
 
 route(app);
+var server = http.createServer(app);
+var io = require('socket.io').listen(server);
 
-http.createServer(app).listen(app.get('port'), function(){
+server.listen(app.get('port'), function(){
   console.log("Express server listening on port " + app.get('port'));
 });
+
+io.sockets.on('connection', function (socket) {
+  socket.emit( 'message', { message: 'Connect to Chat', from: 'system' });
+  
+});
+

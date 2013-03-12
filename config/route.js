@@ -1,25 +1,28 @@
 var PagesController = require('../controllers/pagescontroller')
 ,		AuthController = require('../controllers/authcontroller')
+,		RoomsController = require('../controllers/roomscontroller')
 ,		passport = require('passport');
 
 
-var verifyUser = function (req, res, next) {
+var authUser = function (req, res, next) {
 
+	if (req.url.match('^/(stylesheets|js|images)')) return next();
 	if (req.session.passport.user) return next();
 	res.redirect('/login');
+
+};
+
+var dontAuthUser= function (req, res, next) {
+
+  console.log("this is me");
 
 };
 	
 
 var route = function (app) {
-
-	app.get('/*, verifyUser');//applys middleware to all routes
-
-	app.get('/', PagesController.home);
-
-	app.get('/login', AuthController.login);
-
-	// Redirect the user to Google for authentication.  When complete, Google
+  app.get('/login', AuthController.login);
+  
+  // Redirect the user to Google for authentication.  When complete, Google
 	// will redirect the user back to the application at
 	//     /auth/google/return
 	app.get('/auth/google', passport.authenticate('google'));
@@ -29,7 +32,15 @@ var route = function (app) {
 	// logged in.  Otherwise, authentication has failed.
 	app.get('/auth/google/return', 
 	  passport.authenticate('google', { successRedirect: '/',
-	                                    failureRedirect: '/login' }));
+                                      failureRedirect: '/login' }));
+  app.all('*', authUser);
+  app.get('/', PagesController.home);
+
+  app.get('/rooms', RoomsController.index);
+  app.get('/rooms/:id', RoomsController.show);
+  app.post('/rooms', RoomsController.create);
+  app.put('/rooms/:id', RoomsController.update);
+  app.delete('/rooms/:id', RoomsController.delete);
 
 };
 
