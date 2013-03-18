@@ -66,7 +66,16 @@ server.listen(app.get('port'), function(){
 });
 
 io.sockets.on('connection', function (socket) {
-  socket.emit( 'message', { message: 'Connect to Chat', from: 'system' });
-  
+  socket.emit( 'message', { message: 'Connected', from: 'system' });
+  socket.on( 'join', function(data){
+    socket.leave();
+    socket.join(data.room);
+    socket.broadcast.to(data.room).emit('message', {message:'<p style="color:red;">'+ data.from + "joined the room.</p>", from: "system"});
+    socket.emit( 'message', { message:'<p style="color:red;">'+  'You have joined room' + data.room, from: 'system' });
+  });
+  socket.on( 'message', function(data){
+    socket.broadcast.to(data.room).emit('message', data);
+    // io.sockets.in(data.room).emit('message',data);
+  });
 });
 
