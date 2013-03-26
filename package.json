@@ -12,6 +12,7 @@
     "mongoose": "*",
     "socket.io": "*",
     "passport": "*",
+    "connect-mongo": "*",
     "passport-google": "*"
   }
 }

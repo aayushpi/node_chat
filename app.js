@@ -8,6 +8,7 @@ var express = require('express')
   , http = require('http')
   , path = require('path')
   , passport = require('passport')
+  , mongoStore = require('connect-mongo')(express)
   , mongoose = require('mongoose');
 
 var app = express();
@@ -21,7 +22,13 @@ app.configure(function(){
   app.use(express.bodyParser());
   app.use(express.methodOverride());
   app.use(express.cookieParser('your secret here'));
-  app.use(express.session());
+  app.use(express.session({
+   // secret: config.sessionSecret,
+   store: new mongoStore({
+     url: 'mongodb://localhost/chat_DEV',
+     collection: 'sessions'
+   })
+ }));
   app.use(passport.initialize());
   app.use(passport.session());
   app.use(app.router);
@@ -68,14 +75,12 @@ server.listen(app.get('port'), function(){
 io.sockets.on('connection', function (socket) {
   socket.emit( 'message', { message: 'Connected', from: 'system' });
   socket.on( 'join', function(data){
-    socket.leave();
     socket.join(data.room);
     socket.broadcast.to(data.room).emit('message', {message:'<p style="color:red;">'+ data.from + "joined the room.</p>", from: "system"});
     socket.emit( 'message', { message:'<p style="color:red;">'+  'You have joined room' + data.room, from: 'system' });
   });
-  socket.on( 'message', function(data){
+  socket.on('message', function(data){
     socket.broadcast.to(data.room).emit('message', data);
-    // io.sockets.in(data.room).emit('message',data);
   });
 });
 
