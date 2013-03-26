@@ -71,13 +71,17 @@ var io = require('socket.io').listen(server);
 server.listen(app.get('port'), function(){
   console.log("Express server listening on port " + app.get('port'));
 });
-
-io.sockets.on('connection', function (socket) {
+ io.sockets.on('connection', function (socket) {
   socket.emit( 'message', { message: 'Connected', from: 'system' });
   socket.on( 'join', function(data){
-    socket.join(data.room);
-    socket.broadcast.to(data.room).emit('message', {message:'<p style="color:red;">'+ data.from + "joined the room.</p>", from: "system"});
-    socket.emit( 'message', { message:'<p style="color:red;">'+  'You have joined room' + data.room, from: 'system' });
+    var RoomsModel = require('./models/roomsmodel');  
+    RoomsModel.findById(data.room, function (err, room) {
+      if (!err && room) {
+        socket.join(room._id);
+        socket.broadcast.to(data.room).emit('message', {message:'<p style="color:red;">'+ data.from + " joined the room.</p>", from: "system"});
+        socket.emit( 'message', { message:'<p style="color:red;">'+  'You have joined room ' + room.title, from: 'system' });
+      }
+    });
   });
   socket.on('message', function(data){
     socket.broadcast.to(data.room).emit('message', data);
